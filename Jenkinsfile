@@ -4,7 +4,7 @@ pipeline {
     environment {
         GITHUB_REPO = 'https://github.com/saima-basit/jenkins-lab.git'
         S3_BUCKET = 'saimasbucket'
-        SERVER_IP = '3.27.136.237'
+        SERVER_IP = 'ec2-3-104-117-100.ap-southeast-2.compute.amazonaws.com'
         SERVER_USERNAME = 'ubuntu'
         APP_NAME = 'website.html'
     }
@@ -12,35 +12,44 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: GITHUB_REPO
-            }
-        }
-
-        stage('de allocate previous port') {
-            steps {
                 script {
-                    sh 'sudo docker stop python-flask-container || true'
-                    sh 'sudo docker rm python-flask-container || true'
+                    deleteDir()
+                    git branch: "main",credentialsId: 'git', url: "$GITHUB_REPO"
+
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        
+        stage('check connection') {
             steps {
-                script {
-                    sh 'docker build -t python-flask-app .'
+                sshagent(credentials: ['keypair.pem']) {
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "mkdir p" '
+
                 }
             }
         }
 
-        stage('Run Docker Container') {
+        stage('copy files') {
             steps {
-                script {
-                    sh 'docker run -d -p 1234:5000 python-flask-app'
+                sshagent(credentials: ['keypair.pem']) {
+                     script {
+                        sh 'scp -r ~/workspace/first   $SERVER_USERNAME@$SERVER_IP:~'
+                    }
                 }
             }
         }
 
+        stage('docker-compose up and down') {
+            steps {
+                script {
+                sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "cd first && docker-compose down && docker-compose up -d"'
+                }
+            }
+        }
+
+    
+        
         stage('Publish to S3') {
             steps {
                 sh "aws s3 cp website.html s3://${S3_BUCKET}/ "
