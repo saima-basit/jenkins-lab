@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    environment {
+        GITHUB_REPO = 'https://github.com/saima-basit/jenkins-lab.git'
+        S3_BUCKET = 'saimasbucket'
+        SERVER_IP = 'ec2-3-104-117-100.ap-southeast-2.compute.amazonaws.com'
+        SERVER_USERNAME = 'ubuntu'
+        APP_NAME = 'website.html'
+    }
+    
+    stages {
+        
+        stage('delete exisitng dir') {
+            steps {
+                sshagent(credentials: ['keypair.pem']) {
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "rm -rf jenkins-lab" '
+                }
+            }
+        }
+        
+        stage('clone repo from git to remote-host') {
+            steps {
+                sshagent(credentials: ['keypair.pem']) {
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "git clone -b main https://github.com/saima-basit/jenkins-lab.git" '
+                }
+            }
+        }
+        
+        stage('remove exisitng dangling images') {
+            steps {
+                sshagent(credentials: ['keypair.pem']) {
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "sudo docker images prune -a" '
+                }
+            }
+        }
+        
+        stage('docker build image') {
+            steps {
+                sshagent(credentials: ['keypair.pem']) {sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "cd jenkins-lab && sudo docker build -t test_app:latest . " '
+                }
+            }
+        }
+        
+        stage('stop and remove previous container to fee the port') {
+            steps {
+                sshagent(credentials: ['keypair.pem']) {
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "sudo docker stop test_app && sudo docker remove test_app" '
+                }
+            }
+        }
+        stage('docker run') {
+            steps {
+                sshagent(credentials: ['keypair.pem']) {
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "sudo docker run --name test_app -itd -p 1234:5000 test_app" '
+                }
+            }
+        }
+        
+    }
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
+
+
+                    
