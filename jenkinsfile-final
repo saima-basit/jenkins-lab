@@ -52,7 +52,7 @@ pipeline {
             }
         }
         
-        stage('stop and remove previous container to fee the port') {
+        stage('stop and remove previous container to free the port') {
             steps {
                 sshagent(credentials: ['keypair.pem']) {
                     sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "sudo docker stop test_app && sudo docker remove test_app" '
