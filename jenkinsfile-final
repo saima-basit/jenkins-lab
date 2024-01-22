@@ -29,6 +29,7 @@ pipeline {
         }
 
         */
+
         stage('Pull from git to remote-host') {
             steps {
                 sshagent(credentials: ['keypair.pem']) {
