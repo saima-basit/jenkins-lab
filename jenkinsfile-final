@@ -11,9 +11,8 @@ pipeline {
     
     stages {
         
-
         
-        stage('clone repo from git to remote-host') {
+        stage('Pull from git to remote-host') {
             steps {
                 sshagent(credentials: ['keypair.pem']) {
                     sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "cd jenkins-lab && git pull" '
