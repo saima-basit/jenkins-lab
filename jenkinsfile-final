@@ -63,7 +63,7 @@ pipeline {
                     consoleLogLevel: 'INFO', dontSetBuildResultOnFailure: false, dontWaitForConcurrentBuildCompletion: false,
                      entries: [[
                         bucket: 'saimasbucket',
-                        sourceFile: 'website.html',
+                        sourceFile: 'app.py',
                         noUploadOnFailure: false,
                         useServerSideEncryption: false,
                         selectedRegion: 'ap-southeast-2',
