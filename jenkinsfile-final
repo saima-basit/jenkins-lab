@@ -11,18 +11,12 @@ pipeline {
     
     stages {
         
-        stage('delete exisitng dir') {
-            steps {
-                sshagent(credentials: ['keypair.pem']) {
-                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "rm -rf jenkins-lab" '
-                }
-            }
-        }
+
         
         stage('clone repo from git to remote-host') {
             steps {
                 sshagent(credentials: ['keypair.pem']) {
-                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "git clone -b main https://github.com/saima-basit/jenkins-lab.git" '
+                    sh 'ssh -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP "cd jenkins-lab && git pull" '
                 }
             }
         }
